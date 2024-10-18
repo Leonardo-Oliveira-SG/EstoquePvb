@@ -1,7 +1,9 @@
 ﻿using Application.DTOs;
 using Application.Interfaces.Queries;
 using Domain.Entities;
+using Domain.Interfaces;
 using Infra.Context;
+using Infra.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infra.Queries
@@ -9,23 +11,34 @@ namespace Infra.Queries
     internal class PvbQuery : IPvbQuery
     {
         private readonly ApplicationDbContext _dbContext;
+        private readonly IPvbRepository _pvbRepository;
+        private readonly IEstoquePvbRepository _estoquePvbRepository;
 
-        public PvbQuery(ApplicationDbContext dbContext)
+        public PvbQuery(ApplicationDbContext dbContext, IEstoquePvbRepository estoquePvbRepository, IPvbRepository pvbRepository)
         {
             _dbContext = dbContext;
+            _pvbRepository = pvbRepository;
+            _estoquePvbRepository = estoquePvbRepository;
         }
 
-        public async Task<List<Pvb?>?> Get()
+        public async Task<List<PvbDto?>?> Get()
         {
-            var pvb = _dbContext.Pvb.AsNoTracking().ToList();
+            var pvbs = _pvbRepository.Pvb.AsNoTracking().ToList();
 
-            if (pvb == null)
+            if (pvbs == null || !pvbs.Any())
             {
                 return null;
             }
 
-            return pvb;
+            var pvbsDto = pvbs.Select(pvb => new PvbDto
+            {
+                Codigo = pvb.Codigo,
+                TipoPvb = pvb.TipoPvb,
+            }).ToList();
+
+            return pvbsDto!;
         }
+
 
         public async Task<PaginationResponse<PvbDto>> GetFilter(PaginationRequest paginationRequest)
         {
@@ -81,6 +94,31 @@ namespace Infra.Queries
 
             return pvbDto;
 
+        }
+
+        public async Task<List<PvbDto?>?> GetPvbEmEstoque()
+        {
+            var pvb =  from p in _dbContext.Pvb
+                       join e in _estoquePvbRepository.EstoquePvb on p.Codigo equals e.Codigo
+                       where e.Saldo > 0
+                       select new PvbDto
+                       {
+                           Codigo = p.Codigo,
+                           TipoPvb = p.TipoPvb,
+                           CodigoPvb = p.CodigoPvb,
+                           Fabricante = p.Fabricante,
+                           Espessura = p.Espessura,
+                           TamanhoRolo = p.TamanhoRolo,                      
+                       };
+             
+            var listaPvb = await pvb.ToListAsync();
+
+            if (listaPvb == null)
+            {
+                return null;
+            }
+
+            return listaPvb;
         }
     }
 }

@@ -49,7 +49,7 @@ namespace Application.Services
             return retorno;
         }
 
-        public async Task<List<Pvb>> Get()
+        public async Task<List<PvbDto>> Get()
         {
             return await _pvbQuery.Get();
         }
@@ -64,6 +64,10 @@ namespace Application.Services
             return await _pvbQuery.GetById(codigo);
         }
 
-       
+        public async Task<List<PvbDto>> GetPvbEmEstoque()
+        {
+            return await _pvbQuery.GetPvbEmEstoque();
+        }
+
     }
 }

@@ -108,6 +108,42 @@ namespace API.Controllers
 
             return Ok(buscaCoberturaDeEstoque);
         }
+
+        [HttpGet("/cobertura_estoque_espesura")]
+        public async Task<IActionResult> GetBuscaCoberturaDeEstoqueEspessura(decimal espessura)
+        {
+            var buscaCoberturaDeEstoque = await _buscaService.GetBuscaCoberturaDeEstoquePorEspessuraAsync(espessura);
+            if (buscaCoberturaDeEstoque == null || !buscaCoberturaDeEstoque.Any())
+            {
+                return NotFound(new { message = "Não a itens no estoque para serem mostrados!" });
+            }
+
+            return Ok(buscaCoberturaDeEstoque);
+        }
+
+        [HttpGet("/cobertura_estoque_destino")]
+        public async Task<IActionResult> GetBuscaCoberturaDeEstoqueDestino(string destino)
+        {
+            var buscaCoberturaDeEstoque = await _buscaService.GetBuscaCoberturaDeEstoquePorDestinoAsync(destino);
+            if (buscaCoberturaDeEstoque == null || !buscaCoberturaDeEstoque.Any())
+            {
+                return NotFound(new { message = "Não a itens no estoque para serem mostrados!" });
+            }
+
+            return Ok(buscaCoberturaDeEstoque);
+        }
+
+        [HttpGet("/cobertura_estoque_espessura&destino")]
+        public async Task<IActionResult> GetBuscaCoberturaDeEstoqueEspessuraAndDestino(decimal espessura, string destino)
+        {
+            var buscaCoberturaDeEstoque = await _buscaService.GetBuscaCoberturaDeEstoquePorEspessuraAndDestinoAsync(espessura, destino);
+            if (buscaCoberturaDeEstoque == null || !buscaCoberturaDeEstoque.Any())
+            {
+                return NotFound(new { message = "Não a itens no estoque para serem mostrados!" });
+            }
+
+            return Ok(buscaCoberturaDeEstoque);
+        }
     }
 }
 

@@ -2,7 +2,6 @@
 using Application.Interfaces;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace Application.Services
 {
@@ -31,17 +30,17 @@ namespace Application.Services
         public async Task<List<BuscaEstoqueDto>> GetBuscaEstoqueAsync()
         {
             var estoqueQuery = from ep in _estoquePvbRepository.EstoquePvb
-                         join p in _pvbRepository.Pvb on ep.Codigo equals p.Codigo
-                         select new BuscaEstoqueDto
-                         {
-                             Codigo = ep.Codigo,
-                             TipoPvb = p.TipoPvb,
-                             CodigoPvb = p.CodigoPvb,
-                             Fabricante = p.Fabricante,
-                             Espessura = p.Espessura,
-                             TamanhoRolo = p.TamanhoRolo,
-                             Saldo = ep.Saldo,
-                         };
+                               join p in _pvbRepository.Pvb on ep.Codigo equals p.Codigo
+                               select new BuscaEstoqueDto
+                               {
+                                   Codigo = ep.Codigo,
+                                   TipoPvb = p.TipoPvb,
+                                   CodigoPvb = p.CodigoPvb,
+                                   Fabricante = p.Fabricante,
+                                   Espessura = p.Espessura,
+                                   TamanhoRolo = p.TamanhoRolo,
+                                   Saldo = ep.Saldo,
+                               };
 
 
             var estoque = await estoqueQuery
@@ -50,7 +49,7 @@ namespace Application.Services
                 .ToListAsync();
 
             return estoque;
-           
+
         }
 
         public async Task<List<BuscaEstoqueFabricanteDto>> GetBuscaEstoqueFabricanteAsync()
@@ -106,7 +105,7 @@ namespace Application.Services
 
         public async Task<PaginationResponse<BuscaMovimentacaoPvbDto>> GetBuscaMovimentacaoPvbAsync(PaginationRequest paginationRequest)
         {
-           var totalItems = await (from mv in _movimentacaoRepository.MovimentacaoPvb
+            var totalItems = await (from mv in _movimentacaoRepository.MovimentacaoPvb
                                     select mv).CountAsync();
 
             var skip = (paginationRequest.PageNumber - 1) * paginationRequest.PageSize;
@@ -126,14 +125,14 @@ namespace Application.Services
                                         NumeroRolo = mv.NumeroRolo,
                                         Destino = mv.Destino,
                                         Data = mv.Data,
-                                                                             
+
                                     };
 
 
             var movimentacao = await movimentacaoQuery
-            .OrderBy(mv => mv.Data) 
-            .Skip(skip)          
-            .Take(paginationRequest.PageSize) 
+            .OrderBy(mv => mv.Data)
+            .Skip(skip)
+            .Take(paginationRequest.PageSize)
             .ToListAsync();
 
             return new PaginationResponse<BuscaMovimentacaoPvbDto>
@@ -147,11 +146,9 @@ namespace Application.Services
 
         public async Task<List<CoberturaDeEstoqueDto>> GetBuscaCoberturaDeEstoqueAsync()
         {
-            DateTime dataReferencia = DateTime.Now.AddDays(-90);
-
             var buscaCoberturaDeEstoque = from m in _movimentacaoRepository.MovimentacaoPvb
                                           join l in _pvbRepository.Pvb on m.Codigo equals l.Codigo
-                                          where m.Data >= dataReferencia && m.Destino != "Estoque"
+                                          where m.Data >= DateTime.Now.AddDays(-90) && m.Destino != "Estoque"
                                           group m by new { m.Codigo, l.TipoPvb, l.CodigoPvb, l.TamanhoRolo, l.Espessura } into g
                                           select new CoberturaDeEstoqueDto
                                           {
@@ -161,7 +158,7 @@ namespace Application.Services
                                               TamanhoRolo = g.Key.TamanhoRolo,
                                               Espessura = g.Key.Espessura,
                                               TotalUsado90Dias = g.Count(),
-                                              MediaConsumo = g.Count() / 90.0m,
+                                              MediaConsumo = g.Count() / 3m,
                                           };
 
             var buscaCoberturaResult = await buscaCoberturaDeEstoque.ToListAsync();
@@ -176,6 +173,18 @@ namespace Application.Services
 
             var estoqueResult = await estoqueReferente.ToListAsync();
 
+            var buscaUsadoUltimos30Dias = from m in _movimentacaoRepository.MovimentacaoPvb
+                                          join l in _pvbRepository.Pvb on m.Codigo equals l.Codigo
+                                          where m.Data >= DateTime.Now.AddDays(-30) && m.Destino != "Estoque"
+                                          group m by new { m.Codigo } into g
+                                          select new CoberturaDeEstoqueDto
+                                          {
+                                              Codigo = g.Key.Codigo,
+                                              TotalUsado30Dias = g.Count(),
+                                          };
+
+            var buscaUsadoUltimos30DiasResult = await buscaUsadoUltimos30Dias.ToListAsync();
+
             var resultado = buscaCoberturaResult.Select(b => new CoberturaDeEstoqueDto
             {
                 Codigo = b.Codigo,
@@ -184,13 +193,194 @@ namespace Application.Services
                 TamanhoRolo = b.TamanhoRolo,
                 Espessura = b.Espessura,
                 TotalUsado90Dias = b.TotalUsado90Dias,
-                MediaConsumo = b.MediaConsumo,
-                EstoqueReferente = estoqueResult.FirstOrDefault(e => e.Codigo == b.Codigo)?.EstoqueReferente ?? 0, // Usa 0 se não encontrar
-                CoberturaEstoque = b.MediaConsumo > 0 ? (decimal)b.EstoqueReferente / (decimal)b.MediaConsumo : 0 // Verifica se MediaConsumo é maior que 0
-            }).OrderBy(g => g.Espessura).ToList();
+                MediaConsumo = Math.Round(b.MediaConsumo, 2), // Arredonda para 2 dígitos
+                EstoqueReferente = estoqueResult.FirstOrDefault(e => e.Codigo == b.Codigo)?.EstoqueReferente ?? 0,
+                CoberturaEstoque = b.MediaConsumo > 0
+                ? (int)(estoqueResult.FirstOrDefault(e => e.Codigo == b.Codigo)!.EstoqueReferente / (b.MediaConsumo / (decimal)30.44)) : 0,
+                TotalUsado30Dias = buscaUsadoUltimos30DiasResult.FirstOrDefault(bu => bu.Codigo == b.Codigo)?.TotalUsado30Dias ?? 0
+            }).
+            OrderBy(g => g.Espessura).ToList();
 
             return resultado;
         }
 
+        public async Task<List<CoberturaDeEstoqueDto>> GetBuscaCoberturaDeEstoquePorEspessuraAsync(decimal espessura)
+        {
+            var buscaCoberturaDeEstoque = from m in _movimentacaoRepository.MovimentacaoPvb
+                                          join l in _pvbRepository.Pvb on m.Codigo equals l.Codigo
+                                          where m.Data >= DateTime.Now.AddDays(-90) && m.Destino != "Estoque" && l.Espessura == espessura
+                                          group m by new { m.Codigo, l.TipoPvb, l.CodigoPvb, l.TamanhoRolo, l.Espessura } into g
+                                          select new CoberturaDeEstoqueDto
+                                          {
+                                              Codigo = g.Key.Codigo,
+                                              TipoPvb = g.Key.TipoPvb,
+                                              CodigoPvb = g.Key.CodigoPvb,
+                                              TamanhoRolo = g.Key.TamanhoRolo,
+                                              Espessura = g.Key.Espessura,
+                                              TotalUsado90Dias = g.Count(),
+                                              MediaConsumo = g.Count() / 3m,
+                                          };
+
+            var buscaCoberturaResult = await buscaCoberturaDeEstoque.ToListAsync();
+
+            var estoqueReferente = from e in _estoquePvbRepository.EstoquePvb
+                                   where buscaCoberturaResult.Select(b => b.Codigo).Contains(e.Codigo)
+                                   select new CoberturaDeEstoqueDto
+                                   {
+                                       Codigo = e.Codigo,
+                                       EstoqueReferente = e.Saldo
+                                   };
+
+            var estoqueResult = await estoqueReferente.ToListAsync();
+
+            var buscaUsadoUltimos30Dias = from m in _movimentacaoRepository.MovimentacaoPvb
+                                          join l in _pvbRepository.Pvb on m.Codigo equals l.Codigo
+                                          where m.Data >= DateTime.Now.AddDays(-30) && m.Destino != "Estoque" && l.Espessura == espessura
+                                          group m by new { m.Codigo } into g
+                                          select new CoberturaDeEstoqueDto
+                                          {
+                                              Codigo = g.Key.Codigo,
+                                              TotalUsado30Dias = g.Count(),
+                                          };
+
+            var buscaUsadoUltimos30DiasResult = await buscaUsadoUltimos30Dias.ToListAsync();
+
+            var resultado = buscaCoberturaResult.Select(b => new CoberturaDeEstoqueDto
+            {
+                Codigo = b.Codigo,
+                TipoPvb = b.TipoPvb,
+                CodigoPvb = b.CodigoPvb,
+                TamanhoRolo = b.TamanhoRolo,
+                Espessura = b.Espessura,
+                TotalUsado90Dias = b.TotalUsado90Dias,
+                MediaConsumo = Math.Round(b.MediaConsumo, 2), // Arredonda para 2 dígitos
+                EstoqueReferente = estoqueResult.FirstOrDefault(e => e.Codigo == b.Codigo)?.EstoqueReferente ?? 0,
+                CoberturaEstoque = b.MediaConsumo > 0
+                ? (int)(estoqueResult.FirstOrDefault(e => e.Codigo == b.Codigo)!.EstoqueReferente / (b.MediaConsumo / (decimal)30.44)) : 0,
+                TotalUsado30Dias = buscaUsadoUltimos30DiasResult.FirstOrDefault(bu => bu.Codigo == b.Codigo)?.TotalUsado30Dias ?? 0
+            }).
+                OrderBy(g => g.Espessura).ToList();
+
+                return resultado;
+        }
+
+        public async Task<List<CoberturaDeEstoqueDto>> GetBuscaCoberturaDeEstoquePorDestinoAsync(string destino)
+        { 
+            var buscaCoberturaDeEstoque = from m in _movimentacaoRepository.MovimentacaoPvb
+                                          join l in _pvbRepository.Pvb on m.Codigo equals l.Codigo
+                                          where m.Data >= DateTime.Now.AddDays(-90) && m.Destino == destino
+                                          group m by new { m.Codigo, l.TipoPvb, l.CodigoPvb, l.TamanhoRolo, l.Espessura } into g
+                                          select new CoberturaDeEstoqueDto
+                                          {
+                                              Codigo = g.Key.Codigo,
+                                              TipoPvb = g.Key.TipoPvb,
+                                              CodigoPvb = g.Key.CodigoPvb,
+                                              TamanhoRolo = g.Key.TamanhoRolo,
+                                              Espessura = g.Key.Espessura,
+                                              TotalUsado90Dias = g.Count(),
+                                              MediaConsumo = g.Count() / 3m,
+                                          };
+
+            var buscaCoberturaResult = await buscaCoberturaDeEstoque.ToListAsync();
+
+            var estoqueReferente = from e in _estoquePvbRepository.EstoquePvb
+                                   where buscaCoberturaResult.Select(b => b.Codigo).Contains(e.Codigo)
+                                   select new CoberturaDeEstoqueDto
+                                   {
+                                       Codigo = e.Codigo,
+                                       EstoqueReferente = e.Saldo
+                                   };
+
+            var estoqueResult = await estoqueReferente.ToListAsync();
+
+            var buscaUsadoUltimos30Dias = from m in _movimentacaoRepository.MovimentacaoPvb
+                                          join l in _pvbRepository.Pvb on m.Codigo equals l.Codigo
+                                          where m.Data >= DateTime.Now.AddDays(-30) && m.Destino == destino
+                                          group m by new { m.Codigo } into g
+                                          select new CoberturaDeEstoqueDto
+                                          {
+                                              Codigo = g.Key.Codigo,
+                                              TotalUsado30Dias = g.Count(),
+                                          };
+
+            var buscaUsadoUltimos30DiasResult = await buscaUsadoUltimos30Dias.ToListAsync();
+
+            var resultado = buscaCoberturaResult.Select(b => new CoberturaDeEstoqueDto
+            {
+                Codigo = b.Codigo,
+                TipoPvb = b.TipoPvb,
+                CodigoPvb = b.CodigoPvb,
+                TamanhoRolo = b.TamanhoRolo,
+                Espessura = b.Espessura,
+                TotalUsado90Dias = b.TotalUsado90Dias,
+                MediaConsumo = Math.Round(b.MediaConsumo, 2), // Arredonda para 2 dígitos
+                EstoqueReferente = estoqueResult.FirstOrDefault(e => e.Codigo == b.Codigo)?.EstoqueReferente ?? 0,
+                CoberturaEstoque = b.MediaConsumo > 0
+                ? (int)(estoqueResult.FirstOrDefault(e => e.Codigo == b.Codigo)!.EstoqueReferente / (b.MediaConsumo / (decimal)30.44)) : 0,
+                TotalUsado30Dias = buscaUsadoUltimos30DiasResult.FirstOrDefault(bu => bu.Codigo == b.Codigo)?.TotalUsado30Dias ?? 0
+            }).
+                OrderBy(g => g.Espessura).ToList();
+
+            return resultado;
+        }
+        public async Task<List<CoberturaDeEstoqueDto>> GetBuscaCoberturaDeEstoquePorEspessuraAndDestinoAsync(decimal espessura, string destino)
+        {
+            var buscaCoberturaDeEstoque = from m in _movimentacaoRepository.MovimentacaoPvb
+                                          join l in _pvbRepository.Pvb on m.Codigo equals l.Codigo
+                                          where m.Data >= DateTime.Now.AddDays(-90) && m.Destino == destino && l.Espessura == espessura
+                                          group m by new { m.Codigo, l.TipoPvb, l.CodigoPvb, l.TamanhoRolo, l.Espessura } into g
+                                          select new CoberturaDeEstoqueDto
+                                          {
+                                              Codigo = g.Key.Codigo,
+                                              TipoPvb = g.Key.TipoPvb,
+                                              CodigoPvb = g.Key.CodigoPvb,
+                                              TamanhoRolo = g.Key.TamanhoRolo,
+                                              Espessura = g.Key.Espessura,
+                                              TotalUsado90Dias = g.Count(),
+                                              MediaConsumo = g.Count() / 3m,
+                                          };
+
+            var buscaCoberturaResult = await buscaCoberturaDeEstoque.ToListAsync();
+
+            var estoqueReferente = from e in _estoquePvbRepository.EstoquePvb
+                                   where buscaCoberturaResult.Select(b => b.Codigo).Contains(e.Codigo)
+                                   select new CoberturaDeEstoqueDto
+                                   {
+                                       Codigo = e.Codigo,
+                                       EstoqueReferente = e.Saldo
+                                   };
+
+            var estoqueResult = await estoqueReferente.ToListAsync();
+
+            var buscaUsadoUltimos30Dias = from m in _movimentacaoRepository.MovimentacaoPvb
+                                          join l in _pvbRepository.Pvb on m.Codigo equals l.Codigo
+                                          where m.Data >= DateTime.Now.AddDays(-30) && m.Destino == destino && l.Espessura == espessura
+                                          group m by new { m.Codigo } into g
+                                          select new CoberturaDeEstoqueDto
+                                          {
+                                              Codigo = g.Key.Codigo,
+                                              TotalUsado30Dias = g.Count(),
+                                          };
+
+            var buscaUsadoUltimos30DiasResult = await buscaUsadoUltimos30Dias.ToListAsync();
+
+            var resultado = buscaCoberturaResult.Select(b => new CoberturaDeEstoqueDto
+            {
+                Codigo = b.Codigo,
+                TipoPvb = b.TipoPvb,
+                CodigoPvb = b.CodigoPvb,
+                TamanhoRolo = b.TamanhoRolo,
+                Espessura = b.Espessura,
+                TotalUsado90Dias = b.TotalUsado90Dias,
+                MediaConsumo = Math.Round(b.MediaConsumo, 2), // Arredonda para 2 dígitos
+                EstoqueReferente = estoqueResult.FirstOrDefault(e => e.Codigo == b.Codigo)?.EstoqueReferente ?? 0,
+                CoberturaEstoque = b.MediaConsumo > 0
+                ? (int)(estoqueResult.FirstOrDefault(e => e.Codigo == b.Codigo)!.EstoqueReferente / (b.MediaConsumo / (decimal)30.44)) : 0,
+                TotalUsado30Dias = buscaUsadoUltimos30DiasResult.FirstOrDefault(bu => bu.Codigo == b.Codigo)?.TotalUsado30Dias ?? 0
+            }).
+                OrderBy(g => g.Espessura).ToList();
+
+            return resultado;
+         }
     }
 }
