@@ -30,10 +30,11 @@ namespace Infra.IoC
             #region Queries
 
             services.AddScoped<IPvbQuery, PvbQuery>();
+            services.AddScoped<IBuscaQuery, BuscaQuery>();
             #endregion
 
             #region Repository
-            
+
             services.AddScoped<IPvbRepository, PvbRepository>();
             services.AddScoped<IEstoqueFabricanteRepository, EstoqueFabricanteRepository>();
             services.AddScoped<IEstoquePvbRepository, EstoquePvbRepository>();

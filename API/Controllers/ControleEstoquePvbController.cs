@@ -1,4 +1,4 @@
-﻿using Application.DTOs; 
+﻿using Application.DTOs;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,7 +16,7 @@ namespace API.Controllers
             _entradaRoloService = entradaRoloService;
             _buscaService = buscaService;
         }
-
+       
         [HttpPost("/entrada_estoque")]
         public async Task<ActionResult> Post([FromBody] EntradaRoloDto entradaRoloDto)
         {
@@ -28,7 +28,7 @@ namespace API.Controllers
             return BadRequest("Erro ao adicionar item.");        
 
         }
-
+      
         [HttpPost("/saida_estoque")]
         public async Task<IActionResult> BaixarEstoque([FromBody] SaidaRoloDto saidaRoloDto)
         {
@@ -47,7 +47,7 @@ namespace API.Controllers
                 return StatusCode(500, $"Erro ao baixar o estoque: {ex.Message}");
             }
         }
-
+        
         [HttpGet("/estoque_pvb")]
         public async Task<IActionResult> GetBuscaEstoque()
         {
@@ -59,7 +59,7 @@ namespace API.Controllers
 
             return Ok(estoquePvb);
         }
-
+        
         [HttpGet("/estoque_fabricante")]
         public async Task<IActionResult> GetBuscaEstoqueFabricante()
         {
@@ -71,7 +71,7 @@ namespace API.Controllers
 
             return Ok(estoquePvbFabricante);
         }
-
+       
         [HttpGet("/estoque_temporario")]
         public async Task<IActionResult> GetBuscaEstoqueTemporario()
         {
@@ -83,7 +83,7 @@ namespace API.Controllers
 
             return Ok(estoquePvbTemporario);
         }
-
+       
         [HttpGet("/movimentacao_pvb")]
         public async Task<IActionResult> GetMovimentacoes([FromQuery] PaginationRequest paginationRequest)
         {
@@ -96,7 +96,7 @@ namespace API.Controllers
             return Ok(resultado);
 
         }
-
+       
         [HttpGet("/cobertura_estoque")]
         public async Task<IActionResult> GetBuscaCoberturaDeEstoque()
         {
@@ -108,7 +108,7 @@ namespace API.Controllers
 
             return Ok(buscaCoberturaDeEstoque);
         }
-
+        
         [HttpGet("/cobertura_estoque_espesura")]
         public async Task<IActionResult> GetBuscaCoberturaDeEstoqueEspessura(decimal espessura)
         {
@@ -120,7 +120,7 @@ namespace API.Controllers
 
             return Ok(buscaCoberturaDeEstoque);
         }
-
+      
         [HttpGet("/cobertura_estoque_destino")]
         public async Task<IActionResult> GetBuscaCoberturaDeEstoqueDestino(string destino)
         {

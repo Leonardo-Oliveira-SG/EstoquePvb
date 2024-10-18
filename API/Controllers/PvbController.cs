@@ -21,7 +21,7 @@ namespace API.Controllers
             var pvb = await _pvbService.Add(pvbDto);
             return Ok(pvb);
         }
-
+ 
         [HttpPut("/alterar_cadastro_pvb")]
         public async Task<ActionResult> Put([FromBody] UpdatePvbDto pvbDto)
         {
@@ -46,21 +46,21 @@ namespace API.Controllers
             var responseService = await _pvbService.GetFilter(paginationRequest);
             return Ok(responseService);
         }
-
+        
         [HttpGet("/busca_lista_Pvb")]
         public async Task<ActionResult> Get()
         {
             var responseService = await _pvbService.Get();
             return Ok(responseService);
         }
-
+       
         [HttpGet("/busca_lista_pvb_em_estoque")]
         public async Task<ActionResult> GetPvbEmEstoque()
         {
             var responseService = await _pvbService.GetPvbEmEstoque();
             return Ok(responseService);
         }
-
+       
         [HttpGet("/busca_por_codigo")]
         public async Task<ActionResult> GetById(int codigo)
         {
