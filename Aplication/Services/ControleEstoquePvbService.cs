@@ -145,9 +145,15 @@ public class ControleEstoquePvbService : IEntradaRoloService
             if (estoquePvb != null && estoquePvb.Saldo > 0)
             {
                 estoquePvb.Saldo -= 1; 
-                
-                await _estoquePvbRepository.Update(estoquePvb);
-                
+
+                if (estoquePvb.Saldo == 0)
+                {
+                    await _estoquePvbRepository.RemoveAsync(estoquePvb);
+                }
+                else
+                {
+                    await _estoquePvbRepository.Update(estoquePvb);
+                }
             }
             else
             {

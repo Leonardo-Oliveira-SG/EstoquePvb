@@ -14,8 +14,6 @@ namespace Infra.Repositories
             _context = context;
         }
 
-        
-
         public async Task AddAsync(EstoquePvb entity)
         {
             await _context.AddAsync(entity);

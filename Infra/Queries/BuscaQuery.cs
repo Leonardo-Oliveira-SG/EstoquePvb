@@ -206,8 +206,8 @@ namespace Infra.Queries
                 CoberturaEstoque = b.MediaConsumo > 0
                 ? (int)(estoqueResult.FirstOrDefault(e => e.Codigo == b.Codigo)!.EstoqueReferente / (b.MediaConsumo / (decimal)30.44)) : 0,
                 TotalUsado30Dias = buscaUsadoUltimos30DiasResult.FirstOrDefault(bu => bu.Codigo == b.Codigo)?.TotalUsado30Dias ?? 0
-            }).
-            OrderBy(g => g.Espessura).ToList();
+            })
+            .OrderBy(g => g.Espessura).ToList();
 
             return resultado;
         }
