@@ -37,6 +37,7 @@ namespace Infra.Queries
         {
             var estoqueQuery = from ep in _estoquePvbRepository.EstoquePvb
                                join p in _pvbRepository.Pvb on ep.Codigo equals p.Codigo
+                               where ep.Saldo > 0
                                select new BuscaEstoqueDto
                                {
                                    Codigo = ep.Codigo,
@@ -62,6 +63,7 @@ namespace Infra.Queries
         {
             var estoqueQuery = from ef in _estoqueFabricanteRepository.EstoqueFabricante
                                join p in _pvbRepository.Pvb on ef.Codigo equals p.Codigo
+                               where ef.Saldo > 0
                                select new BuscaEstoqueFabricanteDto
                                {
                                    Codigo = ef.Codigo,

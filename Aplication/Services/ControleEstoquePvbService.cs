@@ -120,14 +120,14 @@ public class ControleEstoquePvbService : IEntradaRoloService
 
     public async Task<SaidaRoloDto> BaixarEstoque(SaidaRoloDto saidaRoloDto)
     {
-        if (!await _estoqueTemporarioRepository.Exists(saidaRoloDto.NumeroRolo))
+        if (!await _estoqueTemporarioRepository.Exists(saidaRoloDto.NumeroRolo!))
         {
             throw new Exception("Este rolo não está cadastrado no estoque.");
         }
 
         try
         {
-            var estoqueTemporario = await _estoqueTemporarioRepository.GetByNumeroRoloAsync(saidaRoloDto.NumeroRolo);
+            var estoqueTemporario = await _estoqueTemporarioRepository.GetByNumeroRoloAsync(saidaRoloDto.NumeroRolo!);
 
             if (estoqueTemporario.Saldo > 0)
             {
@@ -141,18 +141,13 @@ public class ControleEstoquePvbService : IEntradaRoloService
             }
 
             var estoquePvb = await _estoquePvbRepository.GetByCodigoAsync(saidaRoloDto.Codigo);
+
             if (estoquePvb != null && estoquePvb.Saldo > 0)
             {
                 estoquePvb.Saldo -= 1; 
-
-                if (estoquePvb.Saldo == 0)
-                {
-                    await _estoquePvbRepository.RemoveAsync(estoquePvb);
-                }
-                else
-                {
-                    await _estoquePvbRepository.Update(estoquePvb);
-                }
+                
+                await _estoquePvbRepository.Update(estoquePvb);
+                
             }
             else
             {
@@ -164,14 +159,8 @@ public class ControleEstoquePvbService : IEntradaRoloService
             {
                 estoqueFabricante.Saldo -= 1; 
 
-                if (estoqueFabricante.Saldo == 0)
-                {
-                    await _estoqueFabricanteRepository.RemoveAsync(estoqueFabricante);
-                }
-                else
-                {
-                    await _estoqueFabricanteRepository.Update(estoqueFabricante);
-                }
+                await _estoqueFabricanteRepository.Update(estoqueFabricante);
+                
             }
             else
             {

@@ -25,6 +25,7 @@ namespace Infra.IoC
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IEntradaRoloService, ControleEstoquePvbService>();
             services.AddScoped<IBuscaService, BuscaService>();
+            //services.AddScoped<IJwtService, JwtService>();
             #endregion
 
             #region Queries

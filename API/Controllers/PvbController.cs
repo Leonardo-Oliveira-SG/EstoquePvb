@@ -1,9 +1,11 @@
 ﻿using Application.DTOs;
 using Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
+    [Authorize]
     [Route("Api/[Controller]")]
     [ApiController]
     public class PvbController : Controller
@@ -15,13 +17,15 @@ namespace API.Controllers
             _pvbService = pvbService;
         }
 
+        [Authorize(Roles = "Admin,AdminLam")]
         [HttpPost("/cadastro_pvb")]
         public async Task<ActionResult> Post([FromBody] AddPvbDto pvbDto)
         {
             var pvb = await _pvbService.Add(pvbDto);
             return Ok(pvb);
         }
- 
+
+        [Authorize(Roles = "Admin,AdminLam")]
         [HttpPut("/alterar_cadastro_pvb")]
         public async Task<ActionResult> Put([FromBody] UpdatePvbDto pvbDto)
         {
@@ -29,6 +33,7 @@ namespace API.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("/delete")]
         public async Task<ActionResult> Delete(int codigo)
         {

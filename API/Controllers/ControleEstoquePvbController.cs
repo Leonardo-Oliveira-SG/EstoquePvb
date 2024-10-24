@@ -1,9 +1,11 @@
 ﻿using Application.DTOs;
 using Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
+    [Authorize]
     [Route("Api/[Controller]")]
     [ApiController]
     public class ControleEstoquePvbController : Controller
@@ -16,7 +18,8 @@ namespace API.Controllers
             _entradaRoloService = entradaRoloService;
             _buscaService = buscaService;
         }
-       
+
+        [Authorize(Roles = "Admin,AdminLam")]
         [HttpPost("/entrada_estoque")]
         public async Task<ActionResult> Post([FromBody] EntradaRoloDto entradaRoloDto)
         {
@@ -28,7 +31,8 @@ namespace API.Controllers
             return BadRequest("Erro ao adicionar item.");        
 
         }
-      
+
+        [Authorize(Roles = "Admin,AdminLam,LamUser")]
         [HttpPost("/saida_estoque")]
         public async Task<IActionResult> BaixarEstoque([FromBody] SaidaRoloDto saidaRoloDto)
         {
