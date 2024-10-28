@@ -23,6 +23,7 @@ namespace Infra.Repositories
         public async Task Update(MovimentacaoPvb entity)
         {
             _context.MovimentacaoPvb.Update(entity);
+            await SaveChangesAsync();
         }
 
         public async Task<bool> DeleteById(int id)
@@ -40,11 +41,6 @@ namespace Infra.Repositories
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
-        }
-
-        public async Task GetByCodigoAsync(int Codigo)
-        {
-            return;
         }
     }
 }

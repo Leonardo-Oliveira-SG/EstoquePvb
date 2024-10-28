@@ -125,7 +125,7 @@ namespace Infra.Queries
                                     {
                                         Codigo = mv.Codigo,
                                         TipoPvb = tp.TipoPvb,
-                                        Fabricante = et.Fabricante,
+                                        Fabricante = et.Fabricante!,
                                         CodigoPvb = tp.CodigoPvb,
                                         Espessura = tp.Espessura,
                                         TamanhoRolo = tp.TamanhoRolo,

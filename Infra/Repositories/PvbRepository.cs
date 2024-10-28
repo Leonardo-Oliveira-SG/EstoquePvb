@@ -21,9 +21,10 @@ namespace Infra.Repositories
             await _context.AddAsync(entity);
         }
 
-        public async Task Update(Pvb entity)
+        public Task Update(Pvb entity)
         {
             _context.Pvb.Update(entity);
+            return Task.CompletedTask;
         }
 
         public async Task<bool> DeleteById(int Codigo)
@@ -45,7 +46,7 @@ namespace Infra.Repositories
 
         public async Task GetByCodigoAsync(int Codigo)
         {
-            return;
+           await _context.Pvb.AnyAsync(p => p.Codigo == Codigo);
         }
 
         public async Task<bool> Exists(int Codigo)

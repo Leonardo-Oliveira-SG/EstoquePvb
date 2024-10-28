@@ -18,13 +18,13 @@ namespace Infra.Queries
             _estoquePvbRepository = estoquePvbRepository;
         }
 
-        public async Task<List<PvbDto?>?> Get()
+        public async Task<List<PvbDto>> Get()
         {
-            var pvbs = _pvbRepository.Pvb.AsNoTracking().ToList();
+            var pvbs = await _pvbRepository.Pvb.AsNoTracking().ToListAsync();
 
             if (pvbs == null || !pvbs.Any())
             {
-                return null;
+                return null!;
             }
 
             var pvbsDto = pvbs.Select(pvb => new PvbDto
@@ -74,14 +74,14 @@ namespace Infra.Queries
             return paginationResponse;
         }
 
-        public async Task<PvbDto?> GetById(int codigo)
+        public async Task<PvbDto> GetById(int codigo)
         {
             var pvb = await _pvbRepository.Pvb
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Codigo == codigo);
 
             if (pvb == null)
-                return null;
+                return null!;
 
             var pvbDto = new PvbDto
             {

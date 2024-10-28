@@ -24,6 +24,7 @@ namespace Infra.Repositories
         public async Task Update(EstoqueTemporario entity)
         {
             _context.EstoqueTemporario.Update(entity);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<bool> DeleteById(Guid id)
@@ -43,11 +44,6 @@ namespace Infra.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task GetByCodigoAsync(int Codigo)
-        {
-            return;
-        }
-
         public async Task<bool> Exists(string NumeroRolo)
         {
             return await _context.EstoqueTemporario.AnyAsync(e => e.NumeroRolo == NumeroRolo);
@@ -59,7 +55,7 @@ namespace Infra.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<EstoqueTemporario> GetByNumeroRoloAsync(string numeroRolo)
+        public async Task<EstoqueTemporario?> GetByNumeroRoloAsync(string numeroRolo)
         {
             return await _context.Set<EstoqueTemporario>().FirstOrDefaultAsync(e => e.NumeroRolo == numeroRolo);
         }

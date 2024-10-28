@@ -22,6 +22,7 @@ namespace Infra.Repositories
         public async Task Update(EstoqueFabricante estoqueFabricante)
         {
             _context.EstoqueFabricante.Update(estoqueFabricante);
+            await SaveChangesAsync();
         }
 
         public async Task<bool> DeleteByFabricanteAndCodigo(string Fabricante, int Codigo)
@@ -43,14 +44,14 @@ namespace Infra.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<EstoqueFabricante?> GetByFabricanteAndCodigo(string Fabricante, int Codigo)
+        public async Task<EstoqueFabricante> GetByFabricanteAndCodigo(string Fabricante, int Codigo)
         {
             try
             {
                 var estoqueFabricante = await _context.EstoqueFabricante
                     .FirstOrDefaultAsync(e => e.Fabricante == Fabricante && e.Codigo == Codigo);
 
-                return estoqueFabricante;
+                return estoqueFabricante!;
             }
             catch (InvalidCastException)
             {

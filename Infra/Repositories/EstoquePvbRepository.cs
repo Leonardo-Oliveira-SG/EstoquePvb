@@ -22,6 +22,7 @@ namespace Infra.Repositories
         public async Task Update(EstoquePvb entity)
         {
             _context.EstoquePvb.Update(entity);
+            await SaveChangesAsync();
         }
 
         public async Task<bool> DeleteById(Guid id)
@@ -46,7 +47,7 @@ namespace Infra.Repositories
             // Implementação da busca no banco de dados
             var estoquePvb = await _context.EstoquePvb.FirstOrDefaultAsync(e => e.Codigo == Codigo);
 
-            return estoquePvb;
+            return estoquePvb!;
         }
 
         public async Task<bool> Exists(int Codigo)
